@@ -10,14 +10,19 @@ class SubmissionInvitationForm(forms.Form):
     def __init__(self, submission, speaker, *args, **kwargs):
         self.submission = submission
         initial = kwargs.get("initial", {})
-        subject = _("{speaker} invites you to join their session!").format(
+        subject = _("{speaker} invites you to join!").format(
             speaker=speaker.get_display_name()
         )
         initial["subject"] = f"[{submission.event.slug}] {subject}"
+        role = "speaker"
+        if "devroom" in str(submission.event.name):
+            role = "devroom manager"
+        if "stands" in str(submission.event.name):
+            role = "stands organiser"
         initial["text"] = _(
             """Hi!
 
-I'd like to invite you to be a speaker in the session
+I'd like to invite you to be a fellow {role} in
 
   “{title}”
 
@@ -30,6 +35,7 @@ I'm looking forward to it!
         ).format(
             event=submission.event.name,
             title=submission.title,
+            role=role,
             url=submission.urls.accept_invitation.full(),
             speaker=speaker.get_display_name(),
         )
