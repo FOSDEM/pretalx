@@ -185,6 +185,7 @@ class InfoForm(CfPFormMixin, RequestRequire, PublicContent, forms.ModelForm):
             "abstract",
             "description",
             "notes",
+            "image",
             "do_not_record",
             "track",
             "duration",
