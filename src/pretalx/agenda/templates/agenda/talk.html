@@ -107,6 +107,12 @@
                 <section class="description">
                     {{ submission.description|rich_text }}
                 </section>
+                <section class="description">
+                <b>Notes</b><br>
+                {% if "devroom" in submission.event.name|stringformat:"s"|lower %}
+                    {{ submission.notes | rich_text }}
+                {% endif %}
+                </section>
                 {% if answers %}
                     <hr />
                     <section class="answers">
