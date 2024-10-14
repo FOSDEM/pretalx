@@ -28,11 +28,13 @@ class MailTemplateForm(ReadOnlyFlag, I18nHelpText, I18nModelForm):
             kwargs["locales"] = self.event.locales
 
         super().__init__(*args, **kwargs)
-        self.fields["cc"].initial = "{track_mail}"
-        self.fields["reply_to"].initial = "{track_mail}"
-        self.fields["reply_to"].help_text = "{track_mail} will expand to the devroom manager generic mail address."
-        self.fields[
+        if "cc" in self.fields:
+            self.fields["cc"].initial = "{track_mail}"
+            self.fields[
             "cc"].help_text = "{track_mail} will expand to the devroom manager generic mail address"
+        if "reply_to" in self.fields:
+            self.fields["reply_to"].initial = "{track_mail}"
+            self.fields["reply_to"].help_text = "{track_mail} will expand to the devroom manager generic mail address."
 
     def _clean_for_placeholders(self, text, valid_placeholders):
         cleaned_data = super().clean()
