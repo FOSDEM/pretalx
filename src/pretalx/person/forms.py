@@ -4,6 +4,7 @@ from django import forms
 from django.contrib.auth import authenticate
 from django.contrib.auth.hashers import check_password
 from django.core.exceptions import ValidationError
+from django.db.models import Count, Q
 from django.utils import timezone, translation
 from django.utils.functional import cached_property
 from django.utils.translation import gettext_lazy as _
@@ -34,6 +35,7 @@ from pretalx.event.models import Event
 from pretalx.person.models import SpeakerInformation, SpeakerProfile, User
 from pretalx.schedule.forms import AvailabilitiesFormMixin
 from pretalx.submission.models import Question
+from pretalx.submission.models.submission import SubmissionStates
 
 EMAIL_ADDRESS_ERROR = _("Please choose a different email address.")
 
@@ -213,6 +215,7 @@ class SpeakerProfileForm(
             self.fields.pop("get_gravatar", None)
         elif "avatar" in self.fields:
             self.fields["avatar"].required = False
+            self.fields["avatar"].widget.is_required = False
         if self.is_bound and not self.is_valid() and "availabilities" in self.errors:
             # Replace self.data with a version that uses initial["availabilities"]
             # in order to have event and timezone data available
@@ -309,12 +312,6 @@ class OrgaProfileForm(forms.ModelForm):
         fields = ("name", "locale", "matrix_id")
 
 
-class OrgaSpeakerForm(forms.ModelForm):
-    class Meta:
-        model = User
-        fields = ("name", "email", "matrix_id")
-
-
 class LoginInfoForm(forms.ModelForm):
     error_messages = {
         "pw_current_wrong": _("The current password you entered was not correct.")
@@ -360,8 +357,7 @@ class LoginInfoForm(forms.ModelForm):
         super().save()
         password = self.cleaned_data.get("password")
         if password:
-            self.user.set_password(password)
-            self.user.save()
+            self.user.change_password(password)
 
     class Meta:
         model = User
@@ -418,9 +414,26 @@ class SpeakerFilterForm(forms.Form):
         queryset=Question.objects.none(), required=False, widget=forms.HiddenInput()
     )
 
-    def __init__(self, event, *args, **kwargs):
+    def __init__(self, *args, event=None, **kwargs):
         super().__init__(*args, **kwargs)
+        self.event = event
         self.fields["question"].queryset = event.questions.all()
+
+    def filter_queryset(self, queryset):
+        data = self.cleaned_data
+        if data.get("role") == "true":
+            queryset.filter(
+                user__submissions__in=self.event.submissions.filter(
+                    state__in=SubmissionStates.accepted_states
+                )
+            )
+        elif data.get("role") == "false":
+            queryset.exclude(
+                user__submissions__in=self.event.submissions.filter(
+                    state__in=SubmissionStates.accepted_states
+                )
+            )
+        return queryset
 
 
 class UserSpeakerFilterForm(forms.Form):
@@ -443,7 +456,37 @@ class UserSpeakerFilterForm(forms.Form):
 
     def __init__(self, *args, events=None, **kwargs):
         super().__init__(*args, **kwargs)
+        self.events = events
         if events.count() > 1:
             self.fields["events"].queryset = events
         else:
             self.fields.pop("events")
+
+    def filter_queryset(self, queryset):
+        data = self.cleaned_data
+        events = data.get("events") or self.events
+        role = data.get("role") or "speaker"
+
+        qs = (
+            queryset.filter(profiles__event__in=events)
+            .prefetch_related("profiles", "profiles__event")
+            .annotate(
+                submission_count=Count(
+                    "submissions",
+                    filter=Q(submissions__event__in=events),
+                    distinct=True,
+                ),
+                accepted_submission_count=Count(
+                    "submissions",
+                    filter=Q(submissions__event__in=events)
+                    & Q(submissions__state__in=SubmissionStates.accepted_states),
+                    distinct=True,
+                ),
+            )
+        )
+        if role == "speaker":
+            qs = qs.filter(accepted_submission_count__gt=0)
+        elif role == "submitter":
+            qs = qs.filter(accepted_submission_count=0)
+        qs = qs.order_by("id").distinct()
+        return qs

@@ -34,7 +34,8 @@ class LoginView(GenericLoginView):
 
 
 def logout_view(request):
-    logout(request)
+    if request.method == "POST":
+        logout(request)
     return redirect(
         GenericLoginView.get_next_url_or_fallback(request, reverse("orga:login"))
     )
@@ -76,10 +77,7 @@ class RecoverView(FormView):
 
     def form_valid(self, form):
         user = self.get_user()
-        user.set_password(form.cleaned_data["password"])
-        user.pw_reset_token = None
-        user.pw_reset_time = None
-        user.save()
+        user.change_password(form.cleaned_data["password"])
         messages.success(self.request, phrases.cfp.auth_reset_success)
         return super().form_valid(form)
 

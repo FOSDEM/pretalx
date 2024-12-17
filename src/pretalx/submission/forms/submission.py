@@ -402,7 +402,7 @@ class SubmissionFilterForm(forms.Form):
                     question_id=question,
                     options__pk=option,
                 )
-            elif answer:
+            else:
                 answers = Answer.objects.filter(
                     submission_id=OuterRef("pk"),
                     question_id=question,
