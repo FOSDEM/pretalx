@@ -176,7 +176,7 @@ class MailTemplate(PretalxModel):
                 text = str(self.text).format(**context)
                 reply_to = str(self.reply_to).format(**context) if self.reply_to else ""
                 cc = str(self.cc).format(**context) if self.cc else ""
-                if full_submission_content and "submission" in context_kwargs:
+                if "submission" in context_kwargs:
                     text += "\n\n\n***********\n\n" + str(
                         _("Full proposal content:\n\n")
                     )
