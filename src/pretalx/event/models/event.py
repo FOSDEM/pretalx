@@ -771,11 +771,12 @@ class Event(PretalxModel):
         :class:`~pretalx.schedule.models.schedule.Schedule`, or ``None`` before
         the first release.
         """
-        return (
-            self.schedules.order_by("-published")
-            .filter(published__isnull=False)
-            .first()
-        )
+        #return (
+        #    self.schedules.order_by("-published")
+        #    .filter(published__isnull=False)
+        #    .first()
+        #)
+        return self.wip_schedule
 
     @cached_property
     def duration(self):
