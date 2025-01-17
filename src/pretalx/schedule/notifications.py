@@ -8,7 +8,7 @@ from pretalx.common.context_processors import get_day_month_date_format
 
 def get_notification_date_format():
     """Call from correct locale context!"""
-    return "YYYY-MM-DD" + ", " + get_format("TIME_FORMAT")
+    return "D Y-m-d" + ", " + get_format("TIME_FORMAT")
 
 
 def render_notifications(data, event, speaker=None):
