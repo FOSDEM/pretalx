@@ -14,9 +14,13 @@
         {{ form.biography.as_field_group }}
     {% endif %}
 
+    {{ form.matrix_id.as_field_group}}
+    
     {% if form.avatar or form.get_gravatar %}
         {% include "common/avatar.html" with user=user form=form %}
     {% endif %}
+
+
 
     {% if form.availabilities %}
         {% include "common/availabilities.html" %}
