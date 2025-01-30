@@ -84,11 +84,11 @@ urlpatterns = [
                     talk.TalkSocialMediaCard.as_view(),
                     name="talk-social",
                 ),
-                path(
-                    "talk/<slug>/feedback/",
-                    talk.FeedbackView.as_view(),
-                    name="feedback",
-                ),
+                #path(
+                #    "talk/<slug>/feedback/",
+                #    talk.FeedbackView.as_view(),
+                #    name="feedback",
+                #),
                 path(
                     "talk/<slug>.ics",
                     talk.SingleICalView.as_view(),
