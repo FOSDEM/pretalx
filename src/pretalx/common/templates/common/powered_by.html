@@ -34,6 +34,6 @@
 {% safelink "https://pretalx.com" as redir %}
 {% with 'href="'|add:redir|add:'" target="_blank" rel="noopener"'|safe as a_attr %}
     {% blocktranslate trimmed %}
-        <a href="https://pretalx.fosdem.org" {{ a_attr }}>pretalx.fosdem.org</a> is powered by <a {{ a_attr }}>pretalx</a>
+    <a href="https://pretalx.fosdem.org" {{ a_attr }}>pretalx.fosdem.org</a> is powered by <a {{ a_attr }}>pretalx</a>. Please report bugs/send suggestions on <a href="https://github.com/FOSDEM/pretalx-integration">the pretalx integration repository</a>.
     {% endblocktranslate %}
 {% endwith %}
