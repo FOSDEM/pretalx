@@ -100,6 +100,16 @@ def can_view_all_reviews(user, obj):
 
 
 @rules.predicate
+def is_comment_author(user, obj):
+    return obj and obj.user == user
+
+
+@rules.predicate
+def submission_comments_active(user, obj):
+    return obj.event.get_feature_flag("use_submission_comments")
+
+
+@rules.predicate
 def has_reviewer_access(user, obj):
     from pretalx.submission.models import Submission
 
@@ -169,4 +179,18 @@ rules.add_perm("submission.edit_speaker_list", is_speaker | can_change_submissio
 rules.add_perm(
     "submission.view_feedback",
     is_speaker | can_change_submissions | has_reviewer_access,
+)
+rules.add_perm(
+    "submission.view_submission_comments",
+    submission_comments_active & (has_reviewer_access | can_change_submissions),
+)
+rules.add_perm(
+    "submission.add_submission_comments",
+    submission_comments_active & (has_reviewer_access | can_change_submissions),
+)
+rules.add_perm(
+    "submission.delete_submission_comment",
+    submission_comments_active
+    & (has_reviewer_access | can_change_submissions)
+    & is_comment_author,
 )

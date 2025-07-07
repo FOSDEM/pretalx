@@ -7,6 +7,7 @@ from itertools import repeat
 from django.conf import settings
 from django.core.validators import MinValueValidator
 from django.db import models
+from django.db.models import Q
 from django.db.models.fields.files import FieldFile
 from django.utils.crypto import get_random_string
 from django.utils.functional import cached_property
@@ -286,8 +287,11 @@ class Submission(GenerateCode, PretalxModel):
         reviews = "{base}reviews/"
         feedback = "{base}feedback/"
         toggle_featured = "{base}toggle_featured"
+        apply_pending = "{base}apply_pending"
         anonymise = "{base}anonymise/"
+        comments = "{base}comments/"
         quick_schedule = "{self.event.orga_urls.schedule}quick/{self.code}/"
+        history = "{base}history/"
 
     @property
     def image_url(self):
@@ -330,6 +334,27 @@ class Submission(GenerateCode, PretalxModel):
         return self.answers.filter(question__is_visible_to_reviewers=True).order_by(
             "question__position"
         )
+
+    @property
+    def public_answers(self):
+        from pretalx.submission.models.question import QuestionTarget
+
+        qs = (
+            self.answers.filter(
+                Q(question__submission_types__in=[self.submission_type])
+                | Q(question__submission_types__isnull=True),
+                question__is_public=True,
+                question__event=self.event,
+                question__target=QuestionTarget.SUBMISSION,
+            )
+            .select_related("question")
+            .order_by("question__position")
+        )
+        if self.track:
+            qs = qs.filter(
+                Q(question__tracks__in=[self.track]) | Q(question__tracks__isnull=True)
+            )
+        return qs
 
     def get_duration(self) -> int:
         """Returns this submission's duration in minutes.

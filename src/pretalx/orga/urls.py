@@ -39,7 +39,7 @@ urlpatterns = [
         name="admin.user.delete",
     ),
     path("admin/users/", admin.AdminUserList.as_view(), name="admin.user.list"),
-    path("me", event.UserSettings.as_view(), name="user.view"),
+    path("me", person.UserSettings.as_view(), name="user.view"),
     path("me/subuser", person.SubuserView.as_view(), name="user.subuser"),
     path(
         "invitation/<code>",
@@ -397,8 +397,8 @@ urlpatterns = [
                 ),
                 path(
                     "submissions/apply-pending/",
-                    submission.ApplyPending.as_view(),
-                    name="submissions.apply_pending",
+                    submission.ApplyPendingBulk.as_view(),
+                    name="submissions.apply_pending.bulk",
                 ),
                 path(
                     "submissions/statistics/",
@@ -512,9 +512,29 @@ urlpatterns = [
                                 name="submissions.toggle_featured",
                             ),
                             path(
+                                "apply_pending",
+                                submission.ApplyPending.as_view(),
+                                name="submissions.apply_pending",
+                            ),
+                            path(
                                 "anonymise/",
                                 submission.Anonymise.as_view(),
                                 name="submissions.anonymise",
+                            ),
+                            path(
+                                "comments/",
+                                submission.CommentList.as_view(),
+                                name="submissions.comments.list",
+                            ),
+                            path(
+                                "comments/<int:pk>/delete",
+                                submission.CommentDelete.as_view(),
+                                name="submissions.comments.delete",
+                            ),
+                            path(
+                                "history/",
+                                submission.SubmissionHistory.as_view(),
+                                name="submissions.history",
                             ),
                         ]
                     ),
