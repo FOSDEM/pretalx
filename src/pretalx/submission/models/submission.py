@@ -249,7 +249,8 @@ class Submission(GenerateCode, PretalxModel):
         blank=True,
     )
 
-    on_website = models.BooleanField(default=True, blank=False, verbose_name="Show on FOSDEM website", help_text="Show on FOSDEM schedule website. Disable to temporary hide it, eg while scheduling.")
+    on_website = models.BooleanField(default=True, blank=False, verbose_name="Export to website", help_text="Set this field to False block export to the website")
+
 
     objects = ScopedManager(event="event", _manager_class=SubmissionManager)
     deleted_objects = ScopedManager(

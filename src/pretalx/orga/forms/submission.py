@@ -250,7 +250,6 @@ class SubmissionForm(ReadOnlyFlag, RequestRequire, forms.ModelForm):
             "slot_count",
             "image",
             "is_featured",
-            "on_website"
         ]
         widgets = {
             "tags": EnhancedSelectMultiple(color_field="color"),
