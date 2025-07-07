@@ -31,6 +31,8 @@ def test_schedule_xsd_is_up_to_date():
         "GET",
         "https://raw.githubusercontent.com/voc/schedule/master/validator/xsd/schedule.xml.xsd",
     )
+    if response.status == 429:  # don’t fail tests on rate limits
+        return
     assert response.status == 200
     path = Path(__file__).parent / "../fixtures/schedule.xsd"
     with open(path) as schema:
@@ -52,6 +54,8 @@ def test_schedule_json_schema_is_up_to_date():
         "GET",
         "https://raw.githubusercontent.com/voc/schedule/master/validator/json/schema.json",
     )
+    if response.status == 429:  # don’t fail tests on rate limits
+        return
     assert response.status == 200
     path = Path(__file__).parent / "../fixtures/schedule.json"
     with open(path) as schema:
@@ -60,12 +64,9 @@ def test_schedule_json_schema_is_up_to_date():
 
 
 @pytest.mark.django_db
+@pytest.mark.usefixtures("break_slot")
 def test_schedule_frab_xml_export(
-    slot,
-    client,
-    django_assert_max_num_queries,
-    schedule_schema_xml,
-    break_slot,
+    slot, client, django_assert_max_num_queries, schedule_schema_xml
 ):
     with django_assert_max_num_queries(15):
         response = client.get(
@@ -119,9 +120,9 @@ def test_schedule_frab_xml_export_control_char(
 
 
 @pytest.mark.django_db
+@pytest.mark.usefixtures("break_slot")
 def test_schedule_frab_json_export(
     slot,
-    break_slot,
     client,
     django_assert_max_num_queries,
     orga_user,
@@ -167,9 +168,8 @@ def test_schedule_frab_json_export(
 
 
 @pytest.mark.django_db
-def test_schedule_frab_xcal_export(
-    slot, client, django_assert_max_num_queries, break_slot
-):
+@pytest.mark.usefixtures("break_slot")
+def test_schedule_frab_xcal_export(slot, client, django_assert_max_num_queries):
     with django_assert_max_num_queries(11):
         response = client.get(
             reverse(
@@ -304,7 +304,7 @@ def test_html_export_event_unknown(event):
         }
     }
 )
-def test_html_export_release_without_celery(mocker, event):
+def test_html_export_release_without_celery(event):
     with scope(event=event):
         event.cache.delete("rebuild_schedule_export")
         assert not event.cache.get("rebuild_schedule_export")
@@ -322,14 +322,10 @@ def test_html_export_release_without_celery(mocker, event):
             "LOCATION": "lalala",
         }
     },
-    HAS_CELERY=True,
+    CELERY_TASK_ALWAYS_EAGER=False,
 )
 def test_html_export_release_with_celery(mocker, event):
-    mocker.patch("django.core.management.call_command")
-
-    from django.core.management import (  # Import here to avoid overriding mocks
-        call_command,
-    )
+    mocker.patch("pretalx.agenda.tasks.export_schedule_html.apply_async")
 
     with scope(event=event):
         event.cache.delete("rebuild_schedule_export")
@@ -338,7 +334,10 @@ def test_html_export_release_with_celery(mocker, event):
         event.wip_schedule.freeze(name="ohaio means hello")
         assert not event.cache.get("rebuild_schedule_export")
 
-    call_command.assert_called_with("export_schedule_html", event.slug, "--zip")
+    export_schedule_html.apply_async.assert_called_once_with(
+        kwargs={"event_id": event.id},
+        ignore_result=True,
+    )
 
 
 @pytest.mark.django_db
@@ -358,7 +357,8 @@ def test_html_export_release_disabled(mocker, event):
 
 
 @pytest.mark.django_db
-def test_html_export_language(event, slot):
+@pytest.mark.usefixtures("slot")
+def test_html_export_language(event):
     from django.core.management import (  # Import here to avoid overriding mocks
         call_command,
     )
@@ -378,7 +378,8 @@ def test_html_export_language(event, slot):
 
 
 @pytest.mark.django_db
-def test_schedule_export_schedule_html_task(mocker, event, slot):
+@pytest.mark.usefixtures("slot")
+def test_schedule_export_schedule_html_task(mocker, event):
     mocker.patch("django.core.management.call_command")
     from django.core.management import (  # Import here to avoid overriding mocks
         call_command,
@@ -390,7 +391,8 @@ def test_schedule_export_schedule_html_task(mocker, event, slot):
 
 
 @pytest.mark.django_db
-def test_schedule_export_schedule_html_task_nozip(mocker, event, slot):
+@pytest.mark.usefixtures("slot")
+def test_schedule_export_schedule_html_task_nozip(mocker, event):
     mocker.patch("django.core.management.call_command")
     from django.core.management import (  # Import here to avoid overriding mocks
         call_command,
@@ -426,7 +428,7 @@ def test_schedule_orga_trigger_export_without_celery(
 
 
 @pytest.mark.django_db
-@override_settings(HAS_CELERY=True)
+@override_settings(CELERY_TASK_ALWAYS_EAGER=False)
 def test_schedule_orga_trigger_export_with_celery(
     mocker, orga_client, django_assert_max_num_queries, event
 ):
@@ -610,14 +612,10 @@ def test_empty_speaker_csv_export(orga_client, django_assert_max_num_queries, ev
 
 
 @pytest.mark.django_db
-def test_submission_question_csv_export(
-    slot,
-    orga_client,
-    answer,
-    answered_choice_question,
-    impersonal_answer,
-    personal_answer,
-):
+@pytest.mark.usefixtures(
+    "answer", "answered_choice_question", "impersonal_answer", "personal_answer"
+)
+def test_submission_question_csv_export(slot, orga_client):
     response = orga_client.get(
         reverse(
             "agenda:export",
@@ -633,14 +631,10 @@ def test_submission_question_csv_export(
 
 
 @pytest.mark.django_db
-def test_speaker_question_csv_export(
-    slot,
-    orga_client,
-    answer,
-    answered_choice_question,
-    impersonal_answer,
-    personal_answer,
-):
+@pytest.mark.usefixtures(
+    "answer", "answered_choice_question", "impersonal_answer", "personal_answer"
+)
+def test_speaker_question_csv_export(slot, orga_client):
     response = orga_client.get(
         reverse(
             "agenda:export",
