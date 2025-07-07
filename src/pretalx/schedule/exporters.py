@@ -172,6 +172,8 @@ class FrabJsonExporter(ScheduleData):
                 "rooms": [
                     {
                         "name": str(room.name),
+                        "slug": room.slug,
+                        # TODO room url
                         "guid": room.uuid,
                         "description": str(room.description) or None,
                         "capacity": room.capacity,
@@ -181,6 +183,7 @@ class FrabJsonExporter(ScheduleData):
                 "tracks": [
                     {
                         "name": str(track.name),
+                        "slug": track.slug,
                         "color": track.color,
                     }
                     for track in self.event.tracks.all()
@@ -194,19 +197,20 @@ class FrabJsonExporter(ScheduleData):
                         "rooms": {
                             str(room["name"]): [
                                 {
-                                    "url": talk.submission.urls.public.full(),
-                                    "id": talk.submission.id,
                                     "guid": talk.uuid,
-                                    "date": talk.local_start.isoformat(),
-                                    "start": talk.local_start.strftime("%H:%M"),
+                                    "code": talk.submission.code,
+                                    "id": talk.submission.id,
                                     "logo": (
                                         talk.submission.urls.image.full()
                                         if talk.submission.image
                                         else None
                                     ),
+                                    "date": talk.local_start.isoformat(),
+                                    "start": talk.local_start.strftime("%H:%M"),
                                     "duration": talk.export_duration,
                                     "room": str(room["name"]),
                                     "slug": talk.frab_slug,
+                                    "url": talk.submission.urls.public.full(),
                                     "title": talk.submission.title,
                                     "subtitle": "",
                                     "track": (
@@ -222,54 +226,41 @@ class FrabJsonExporter(ScheduleData):
                                     "do_not_record": talk.submission.do_not_record,
                                     "persons": [
                                         {
-                                            "guid": person.guid,
-                                            "id": person.id,
                                             "code": person.code,
-                                            "public_name": person.get_display_name(),
+                                            "name": person.get_display_name(),
                                             "avatar": person.get_avatar_url(self.event)
                                             or None,
-                                            "biography": getattr(
-                                                person.profiles.filter(
-                                                    event=self.event
-                                                ).first(),
-                                                "biography",
-                                                "",
-                                            ),
-                                            "answers": (
-                                                [
-                                                    {
-                                                        "question": answer.question.id,
-                                                        "answer": answer.answer,
-                                                        "options": [
-                                                            option.answer
-                                                            for option in answer.options.all()
-                                                        ],
-                                                    }
-                                                    for answer in person.answers.all()
-                                                ]
-                                                if getattr(self, "is_orga", False)
-                                                else []
-                                            ),
+                                            "biography": person.event_profile(
+                                                self.event
+                                            ).biography,
+                                            "public_name": person.get_display_name(),  # deprecated
+                                            "guid": person.guid,
+                                            "url": person.event_profile(
+                                                self.event
+                                            ).urls.public.full(),
                                         }
                                         for person in talk.submission.speakers.all()
                                     ],
-                                    "links": [],
-                                    "attachments": [],
-                                    "answers": (
-                                        [
-                                            {
-                                                "question": answer.question.id,
-                                                "answer": answer.answer,
-                                                "options": [
-                                                    option.answer
-                                                    for option in answer.options.all()
-                                                ],
-                                            }
-                                            for answer in talk.submission.answers.all()
-                                        ]
-                                        if getattr(self, "is_orga", False)
-                                        else []
-                                    ),
+                                    "links": [
+                                        {
+                                            "title": resource.description,
+                                            "url": resource.link,
+                                            "type": "related",
+                                        }
+                                        for resource in talk.submission.resources.all()
+                                        if resource.link
+                                    ],
+                                    "feedback_url": talk.submission.urls.feedback.full(),
+                                    "origin_url": talk.submission.urls.public.full(),
+                                    "attachments": [
+                                        {
+                                            "title": resource.description,
+                                            "url": resource.resource.url,
+                                            "type": "related",
+                                        }
+                                        for resource in talk.submission.resources.all()
+                                        if not resource.link
+                                    ],
                                 }
                                 for talk in room["talks"]
                             ]

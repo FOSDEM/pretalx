@@ -3,6 +3,9 @@
 Release Notes
 =============
 
+- :feature:`schedule` When you embed the pretalx widget on an external page, clicking on session links will open the sessions in a new tab, so attendees won't have to try to navigate back to your home page.
+- :feature:`schedule` Organisers can now configure additional links to show in the top menu next to "Schedule", "Sessions", "Speakers", handy for links back to the conference website, streams, etc.
+- :feature:`orga` Organisers can now configure footer links that will be shown on all schedule pages.
 - :feature:`cfp` pretalx will now send an email after a user changes their password, notifying them of the change.
 - :feature:`orga,1302` Organisers can now customise the template used to inform speakers when they are added to a proposal by an organiser. There are two new templates – one for speakers with an existing account, and one for speakers without account who need to set their password.
 - :feature:`orga,1311` Organisers can now customise the “New proposal” notification email contents.
