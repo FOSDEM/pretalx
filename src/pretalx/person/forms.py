@@ -39,11 +39,6 @@ from pretalx.submission.models.submission import SubmissionStates
 
 EMAIL_ADDRESS_ERROR = _("Please choose a different email address.")
 
-def validate_matrix_id(value):
-    matrix_id_pattern = r'^@[a-zA-Z0-9._=-]+:[a-zA-Z0-9.-]+$'
-    if not re.match(matrix_id_pattern, value):
-        raise ValidationError('Invalid Matrix ID format')
-
 
 class UserForm(CfPFormMixin, forms.Form):
     default_renderer = InlineFormLabelRenderer
@@ -179,7 +174,7 @@ class SpeakerProfileForm(
     RequestRequire,
     forms.ModelForm,
 ):
-    USER_FIELDS = ["name", "email", "matrix_id", "avatar", "get_gravatar"]
+    USER_FIELDS = ["name", "email", "avatar", "get_gravatar"]
     FIRST_TIME_EXCLUDE = ["email"]
 
     def __init__(self, *args, name=None, **kwargs):
@@ -248,8 +243,6 @@ class SpeakerProfileForm(
 
     def clean(self):
         data = super().clean()
-        if data.get("matrix_id"):
-            validate_matrix_id(data["matrix_id"])
         if (
             self.event.cfp.require_avatar
             and not data.get("avatar")
@@ -302,14 +295,15 @@ class SpeakerProfileForm(
 
 
 class OrgaProfileForm(forms.ModelForm):
-    def clean(self):
-        data = super().clean()
-        if data.get("matrix_id"):
-            validate_matrix_id(data["matrix_id"])
-
     class Meta:
         model = User
-        fields = ("name", "locale", "matrix_id")
+        fields = ("name", "locale")
+
+
+class OrgaSpeakerForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ("name", "email")
 
 
 class LoginInfoForm(forms.ModelForm):
