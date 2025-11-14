@@ -115,6 +115,11 @@
                     </div>
                 </div>
             {% endfor %}
+                <div class="form-group row">
+                    <label class="col-md-3 col-form-label">Submission time</label>
+		    <div class="col-md-9 mt-2"> {{ submission.created }}
+                    </div>
+                </div>
             {% if no_anonymisation %}
                 {% if submission.active_resources %}
                     <div class="form-group row">
