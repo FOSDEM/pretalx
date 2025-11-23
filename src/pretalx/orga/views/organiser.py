@@ -41,6 +41,7 @@ class TeamView(OrgaCRUDView):
     url_name = "organiser.teams"
     context_object_name = "team"
     permission_required = "event.update_team"
+    paginate_by = 200 # show all teams
 
     def get_queryset(self):
         return self.request.organiser.teams.all().order_by("-all_events", "-id")
