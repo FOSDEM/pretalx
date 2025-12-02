@@ -104,10 +104,6 @@
         {% endblock email_editor_preview %}
 
         {% block skip_queue %}
-            {% if form.skip_queue and request.method == "POST" %}
-                <hr />
-                {{ form.skip_queue.as_field_group }}
-            {% endif %}
         {% endblock skip_queue %}
 
         {% block email_editor_actions %}
