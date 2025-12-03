@@ -72,7 +72,7 @@ class ScheduleView(EventPermissionRequired, TemplateView):
 
 class ScheduleExportView(EventPermissionRequired, FormView):
     template_name = "orga/schedule/export.html"
-    permission_required = "schedule.orga_view_schedule"
+    permission_required = "submission.orga_update_submission"
     form_class = ScheduleExportForm
 
     def get_form_kwargs(self):
