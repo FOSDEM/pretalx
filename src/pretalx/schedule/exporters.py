@@ -41,9 +41,9 @@ class ScheduleData(BaseExporter):
         schedule = self.schedule
 
         base_qs = (
-            schedule.talks.all()
+            schedule.talks.all(submission__track__tracksettings__on_website=True)
             if self.with_accepted
-            else schedule.talks.filter(is_visible=True)
+            else schedule.talks.filter(is_visible=True, submission__track__tracksettings__on_website=True)
         )
         talks = (
             base_qs.select_related(
