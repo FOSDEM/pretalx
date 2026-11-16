@@ -214,9 +214,9 @@ class InfoForm(CfPFormMixin, RequestRequire, PublicContent, forms.ModelForm):
             "abstract": MarkdownWidget,
             "description": MarkdownWidget,
             "notes": MarkdownWidget,
-            "track": EnhancedSelect(
-                description_field="description", color_field="color"
-            ),
+            # Track descriptions are shown below the field (trackDescription.js),
+            # not inside the dropdown
+            "track": EnhancedSelect(color_field="color"),
         }
         field_classes = {
             "submission_type": SafeModelChoiceField,

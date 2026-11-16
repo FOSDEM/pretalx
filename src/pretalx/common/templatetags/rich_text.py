@@ -1,4 +1,5 @@
 import html
+import re
 from copy import copy
 from functools import partial
 
@@ -67,7 +68,14 @@ ALLOWED_TLDS = sorted(  # Sorting this list makes sure that shorter substring TL
 TLD_REGEX = bleach.linkifier.build_url_re(
     tlds=ALLOWED_TLDS, protocols=ALLOWED_PROTOCOLS
 )
-EMAIL_REGEX = bleach.linkifier.build_email_re(tlds=ALLOWED_TLDS)
+_BASE_EMAIL_REGEX = bleach.linkifier.build_email_re(tlds=ALLOWED_TLDS)
+# bleach looks for emails before URLs, so an address inside a URL path (e.g.
+# mailing list archives: https://lists.example.org/list/foo@lists.example.org/…)
+# would break the URL into a bogus mailto: link. Don't match emails that are
+# directly preceded by URL characters.
+EMAIL_REGEX = re.compile(
+    r"(?<![/\w.:%+=-])" + _BASE_EMAIL_REGEX.pattern, _BASE_EMAIL_REGEX.flags
+)
 
 
 def link_callback(attrs, is_new, **kwargs):

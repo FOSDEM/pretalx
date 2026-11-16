@@ -47,6 +47,19 @@
             {% block inner %}
                 {{ form }}
             {% endblock inner %}
+            {% if form.fields.track %}
+                {# Rendered track descriptions, shown below the track dropdown by trackDescription.js #}
+                <div id="track-descriptions" class="d-none">
+                    {% for track in form.fields.track.queryset %}
+                        {% if track.description %}
+                            <div class="track-description form-text text-muted" data-track="{{ track.pk }}">{{ track.description|rich_text }}</div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+                {% compress js %}
+                    <script defer src="{% static "cfp/js/trackDescription.js" %}"></script>
+                {% endcompress %}
+            {% endif %}
             {% block buttons %}
                 <div class="row flex-row-reverse">
                     <div class="col-md-3 flip ml-auto d-flex flex-column">
